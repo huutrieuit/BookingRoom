@@ -1,5 +1,5 @@
 const { Sequelize, DataTypes, Op } = require('sequelize'); // Import Sequelize, DataTypes và Op
-const sequelize = new Sequelize('postgres://postgres:postgres@localhost:5432/book_room_db');
+const sequelize = new Sequelize('postgres://postgres:postgres@localhost:5432/book_room_db_test');
 
 const User = sequelize.define('User', {
   username: {
