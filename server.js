@@ -59,32 +59,32 @@ app.post('/register', async (req, res) => {
 });
 
 // get user
-app.get('/users', async(req, res) => {
-  const { username, event }  = req.query; 
+app.get('/users', async (req, res) => {
+  const { username, event } = req.query;
   try {
-    const user = await User.findOne({where: { username }});
-    
-    if(user){
+    const user = await User.findOne({ where: { username } });
+
+    if (user) {
       const booking = await Booking.findByPk(event.id);
-      if(booking){
+      if (booking) {
         console.log(booking, user.id);
-        
+
         booking.UserId = user.id;
         booking.save();
 
         res.status(200).json(user);
-      }else{
-        res.status(400).json({error: 'booking not found!!'});
+      } else {
+        res.status(400).json({ error: 'booking not found!!' });
       }
-    }else{
-      res.status(400).json({ error: 'user not found!!'});
+    } else {
+      res.status(400).json({ error: 'user not found!!' });
       //res.status(400).json({ error: error.message });
     }
   } catch (error) {
     console.log("req: ", error);
-    res.status(400).json({error: error.message});
+    res.status(400).json({ error: error.message });
   }
-  
+
 });
 
 // Đăng nhập người dùng
@@ -129,7 +129,7 @@ app.get('/bookings', async (req, res) => {
         attributes: ['username']  // Lấy username của người dùng
       }
     });
-    
+
     res.status(200).json(bookings);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -140,11 +140,11 @@ app.get('/bookings', async (req, res) => {
 
 // Tạo booking mới
 app.post('/book', async (req, res) => {
-  const { start, end, title, approved, UserId , RoomId} = req.body;
+  const { start, end, title, approved, UserId, RoomId } = req.body;
   const currentTime = new Date();
-  
-   // Kiểm tra thời gian book phải lớn hơn thời gian hiện tại
-   if (new Date(start) <= currentTime) {
+
+  // Kiểm tra thời gian book phải lớn hơn thời gian hiện tại
+  if (new Date(start) <= currentTime) {
     return res.status(400).json({ error: 'Booking time must be in the future' });
   }
 
@@ -169,7 +169,7 @@ app.post('/book', async (req, res) => {
       return res.status(400).json({ error: 'Time slot is already booked' });
     }
 
-    const booking = await Booking.create({ start, end, title, approved, UserId , RoomId});
+    const booking = await Booking.create({ start, end, title, approved, UserId, RoomId });
     res.status(201).json(booking);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -196,7 +196,7 @@ app.put('/approve/:id', async (req, res) => {
 // Cập nhật booking
 app.put('/bookings/:id', async (req, res) => {
   const { id } = req.params;
-  const { userId, role, start, end, title } = req.body;
+  const { userId, role, start, end, title, RoomId } = req.body;
   try {
     const booking = await Booking.findByPk(id);
     if (!booking) {
@@ -206,6 +206,28 @@ app.put('/bookings/:id', async (req, res) => {
     if (role !== 'admin' && booking.UserId !== userId) {
       return res.status(403).json({ error: 'Permission denied' });
     }
+
+    // Kiểm tra thời gian book không vượt quá 2 giờ
+    const bookingDuration = (new Date(end) - new Date(start)) / (1000 * 60 * 60); // tính bằng giờ
+    if (bookingDuration > 2) {
+      return res.status(400).json({ error: 'Booking duration cannot exceed 2 hours' });
+    }
+    const overlappingBooking = await Booking.findOne({
+      where: {
+        //approved: true,
+        id: {[Op.ne]: id},
+        RoomId,
+        [Op.or]: [
+          { start: { [Op.lt]: end }, end: { [Op.gt]: start } }
+        ],
+      
+      }
+    });
+
+    if (overlappingBooking) {
+      return res.status(400).json({ error: 'Time slot is already booked' });
+    }
+
     // Cập nhật booking
     booking.start = start;
     booking.end = end;

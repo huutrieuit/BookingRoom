@@ -78,7 +78,8 @@ const BookingProvider = ({ children }) => {
       await axios.put(`${API_BASE_URL}/bookings/${id}`, {
         ...updatedBooking,
         userId: user.id,
-        role: user.role
+        role: user.role,
+        RoomId: roomId
       });
       fetchBookings(roomId);  // Refresh bookings sau khi cập nhật
     } catch (error) {
@@ -90,8 +91,7 @@ const BookingProvider = ({ children }) => {
   const transferUser = async (username, event) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/users`,{params: {username, event}});
-      const user = response.data;
-      return user;
+      return response.data;
     } catch (error) {
       return error.response.data;
     }
