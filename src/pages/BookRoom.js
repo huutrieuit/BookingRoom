@@ -1,19 +1,20 @@
-import { CheckOutlined, DeleteOutlined, LogoutOutlined, SyncOutlined, UserSwitchOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
-import { Button, Col, Form, Input, Layout, message, Modal, Popconfirm, Row, Select, Tooltip,Flex, Tag  } from 'antd';
-import { Footer } from 'antd/es/layout/layout';
+import { CheckCircleOutlined, CheckOutlined, DeleteOutlined, StopOutlined, UserSwitchOutlined } from '@ant-design/icons';
+import { Button, Layout, message, Popconfirm, Tooltip } from 'antd';
 import moment from 'moment';
 import React, { useContext, useEffect, useState } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
+import { momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { BookingContext } from '../context/BookingContext';
 import { UserContext } from '../context/UserContext';
+import BookingCalendar from './component/BookingCalendar';
+import FooterComponent from './component/FooterComponent';
+import HeaderComponent from './component/HeaderComponent';
+import RoomSelector from './component/RoomSelector';
+import TransferModal from './component/TransferModal';
 
-const { Header, Content } = Layout;
-const { Option } = Select;
+const { Content } = Layout;
 const localizer = momentLocalizer(moment);
-const DnDCalendar = withDragAndDrop(Calendar);
 
 const BookRoom = () => {
   const { rooms, bookings, fetchBookings, addBooking, approveBooking, removeBooking, updateBooking, transferUser } = useContext(BookingContext);
@@ -30,6 +31,7 @@ const BookRoom = () => {
   }
 
   useEffect(() => {
+    console.log("3");
     const transformedBookings = bookings.map(booking => ({
       //title: booking.title.includes('@') ? booking.title : `@${booking.user}: ${booking.title}`,
       title: booking.title,
@@ -48,15 +50,18 @@ const BookRoom = () => {
   useEffect(() => {
     if (selectedRoom) {
       fetchBookings(selectedRoom);
+      console.log("2");
     }
   }, [selectedRoom]);
 
   useEffect(() => {
+    console.log("1");
     if (rooms.length > 0 && selectedRoom === null) {
       setSelectedRoom(rooms[0].id);
       fetchBookings(rooms[0].id);
     }
-  }, [rooms]);
+    
+  }, [rooms, selectedRoom, fetchBookings]);
 
   const handleSelectSlot = async ({ start, end }) => {
     if (user) {
@@ -95,11 +100,6 @@ const BookRoom = () => {
     };
   };
 
-  const handleRoomSelect = (value) => {
-    setSelectedRoom(value);
-  };
-
-
   const handleEventChangeUser = (event) => {
     setEvent(event);
     if (event.UserId === user.id) {
@@ -107,11 +107,6 @@ const BookRoom = () => {
     }
     fetchBookings(selectedRoom);
   }
-
-
-  const handleRefresh = () => {
-    fetchBookings(selectedRoom);
-  };
 
   const handleTransfer = async (values) => {
     const { username } = values;
@@ -151,11 +146,6 @@ const BookRoom = () => {
     }
 
   };
-
-  const handleLogout = () => {
-    logoutUser();
-  }
-
 
   const renderEvent = (event) => {
     return (
@@ -232,80 +222,33 @@ const BookRoom = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <Row justify="space-between" align="middle">
-          <Col>
-            <img src="/bookroom.png" alt="Book a Room" style={{ width: '100px', height: 'auto', margin: '5px 0' }} />
-          </Col>
-          <Col>
-            <Tooltip title="Logout"> <Button type="text" icon={<LogoutOutlined style={{ color: '#ff4d4f' }} />} onClick={handleLogout} /> {/* Icon logout màu đỏ */}
-            </Tooltip>
-          </Col>
-        </Row>
-      </Header>
+      <HeaderComponent handleLogout={logoutUser} />
       <Content style={{ margin: '16px', padding: '12px', background: '#fff', borderRadius: '8px' }}>
-        {rooms && (
-          <Select
-            placeholder="Select a room"
-            style={{ width: 200, marginBottom: 16 }}
-            onChange={handleRoomSelect}
-            value={selectedRoom}
-            optionFilterProp="children"
-            filterOption={(input, option) => option.children.toLowerCase().includes(input.toLowerCase())}
-          >
-            {rooms.map(room => (
-              <Option key={room.id} value={room.id} selected={1 == room.id} >{room.name}</Option>
-            ))}
-          </Select>
-        )}
-        <Button type="text" icon={<SyncOutlined style={{ color: '#1890ff' }} />} onClick={handleRefresh} /> {/* Icon refresh */}
-        <div style={{paddingBottom: 15}}>
-          <Flex gap="4px 0" wrap>
-            <Tag color={colorType.APPROVE}>Approved</Tag>
-            <Tag color={colorType.PENDING}>Pending</Tag>
-            <Tag color={colorType.PICK}>Current</Tag>
-          </Flex>
-        </div>
-        <DnDCalendar
-          localizer={localizer}
+        <RoomSelector
+          rooms={rooms}
+          selectedRoom={selectedRoom}
+          handleRoomSelect={setSelectedRoom}
+          handleRefresh={() => fetchBookings(selectedRoom)}
+          colorType={colorType}
+        />
+         <BookingCalendar
           events={events}
-          startAccessor="start"
-          endAccessor="end"
-          selectable
-          defaultView="week"
+          localizer={localizer}
           slotPropGetter={slotPropGetter}
-          defaultDate={moment().toDate()}
-          onSelectSlot={handleSelectSlot}
-          //onSelectEvent={handleEventChangeUser}
-          eventPropGetter={eventStyleGetter}
-          onEventDrop={handleEventDrop}
-          onEventResize={handleEventResize}
-          style={{ height: 700, borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
-          resizable
-          components={{ event: renderEvent }}
-          formats={{ timeGutterFormat: 'HH:mm', eventTimeRangeFormat: () => '' }}
-          min={new Date(1970, 1, 1, 7)} // Start displaying from 6 AM 
-          max={new Date(1970, 1, 1, 19)} // End displaying at 10 PM
+          handleSelectSlot={handleSelectSlot}
+          eventStyleGetter={eventStyleGetter}
+          handleEventDrop={handleEventDrop}
+          handleEventResize={handleEventResize}
+          renderEvent={renderEvent}
         />
       </Content>
-      <Footer style={{ background: '#fff', padding: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}> © 2024 TrieuPH. All rights reserved. </Footer>
-
+      <FooterComponent />
       {/* Modal for transferring booking */}
-      <Modal
-        title="Transfer Booking"
-        open={isTransferModalVisible}
+      <TransferModal
+        isVisible={isTransferModalVisible}
         onCancel={() => setIsTransferModalVisible(false)}
-        footer={null}
-      >
-        <Form onFinish={handleTransfer} layout="vertical">
-          <Form.Item name="username" label="Username" rules={[{ required: true, message: 'Please input the username!' }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">Transfer</Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        handleTransfer={handleTransfer}
+      />
     </Layout>
   );
 };

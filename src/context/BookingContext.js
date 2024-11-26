@@ -60,8 +60,6 @@ const BookingProvider = ({ children }) => {
   };
 
   const removeBooking = async (id) => {
-    console.log("sss");
-    
     try {
       await axios.delete(`${API_BASE_URL}/bookings/${id}`, {
         data: { userId: user.id, role: user.role }  // Gửi userId và role cùng với request
