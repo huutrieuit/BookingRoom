@@ -29,7 +29,7 @@ const BookingCalendar = ({
     eventPropGetter={eventStyleGetter}
     onEventDrop={handleEventDrop}
     onEventResize={handleEventResize}
-    style={{ height: 700, borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
+    style={{ height: 650, borderRadius: '8px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)' }}
     resizable
     components={{ event: renderEvent }}
     formats={{ timeGutterFormat: 'HH:mm', eventTimeRangeFormat: () => '' }}

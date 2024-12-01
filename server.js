@@ -1,10 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const os = require('os');
-const { Sequelize, Op } = require('sequelize'); // Import thêm Op
+const { Op, where } = require('sequelize'); // Import thêm Op
 const { User, Booking, Room, sequelize } = require('./models');
-const { error } = require('console');
 const app = express();
 
 app.use(bodyParser.json());
@@ -20,31 +18,6 @@ app.get('/rooms', async (req, res) => {
   }
 });
 
-// Tạo booking mới
-/*app.post('/book', async (req, res) => {
-  const { start, end, title, UserId, RoomId } = req.body;
-  try {
-    const overlappingBooking = await Booking.findOne({
-      where: {
-        RoomId,
-        approved: true,
-        [Op.or]: [
-          { start: { [Op.lt]: end }, end: { [Op.gt]: start } }
-        ]
-      }
-    });
-
-    if (overlappingBooking) {
-      return res.status(400).json({ error: 'Time slot is already booked' });
-    }
-
-    const booking = await Booking.create({ start, end, title, UserId, RoomId });
-    res.status(201).json(booking);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});*/
-
 // Đăng ký người dùng
 app.post('/register', async (req, res) => {
   //const { username, password, role } = req.body;
@@ -58,6 +31,23 @@ app.post('/register', async (req, res) => {
   }
 });
 
+// Đăng ký account with ip
+app.set('trust proxy', true);
+app.post('/check-login-with-ip', async (req, res) => {
+  const ip = req.ip;
+  try {
+    const user = await User.findOne({where: { ip: ip}});
+    if(!user){
+      res.status(203).json(ip);
+    }else
+    {
+      res.status(200).json(user);
+    }
+  } catch (error) {
+    res.status(400).json({error: error.message});
+  }
+});
+
 // get user
 app.get('/users', async (req, res) => {
   const { username, event } = req.query;
@@ -67,8 +57,6 @@ app.get('/users', async (req, res) => {
     if (user) {
       const booking = await Booking.findByPk(event.id);
       if (booking) {
-        console.log(booking, user.id);
-
         booking.UserId = user.id;
         booking.save();
 
@@ -81,7 +69,6 @@ app.get('/users', async (req, res) => {
       //res.status(400).json({ error: error.message });
     }
   } catch (error) {
-    console.log("req: ", error);
     res.status(400).json({ error: error.message });
   }
 
@@ -102,17 +89,54 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Đăng nhập bằng tên PC
+// Đăng nhập bằng IP PC
 app.post('/login-pc', async (req, res) => {
-  const pcUsername = os.userInfo().username; // Get logged-in PC username
+  const  {usernameforpc, ip} = req.body
   try {
-    let user = await User.findOne({ where: { username: pcUsername } });
+    let user = await User.findOne({ where: { ip: ip } });
     if (!user) {
-      user = await User.create({ username: pcUsername, password: 'defaultPassword', role: 'user' });
+      user = await User.create({ username: usernameforpc, password: 'defaultPassword',ip: ip, role: 'user' });
       return res.status(201).json(user);
     }
-    res.status(200).json(user);
+    //res.status(200).json(user);
   } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+//Update profile
+app.post('/users/profile/:id', async (req, res)=>{
+  try {
+    const id = req.params.id;
+    const { username } = req.body;
+    
+    const user = await User.findOne({where:{id}})
+    if(user){ 
+      await User.update({username: username}, {where: {id:id}});
+      return res.status(200).json({...user.dataValues,username});
+    }
+    return res.status(201).json({error: 'User not found !!!'});
+  } catch (error) {
+    console.error("API: profile", error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+//update color
+app.put('/users/mycolor/:id', async(req, res) => {
+  try {
+    
+    const id = req.params.id;
+    const {mycolor} = req.body;
+
+    const user = await User.findOne({where: {id}});
+    if(user){
+      await User.update({mycolor}, {where: {id}});
+      return res.status(200).json({...user.dataValues,mycolor});
+    }
+    return res.status(201).json({error: 'User not found !!!'});
+  } catch (error) {
+    console.error("API: update color", error.message);
     res.status(400).json({ error: error.message });
   }
 });

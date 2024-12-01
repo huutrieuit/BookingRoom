@@ -18,7 +18,7 @@ const localizer = momentLocalizer(moment);
 
 const BookRoom = () => {
   const { rooms, bookings, fetchBookings, addBooking, approveBooking, removeBooking, updateBooking, transferUser } = useContext(BookingContext);
-  const { user, logoutUser } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const [events, setEvents] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
@@ -26,8 +26,7 @@ const BookRoom = () => {
 
   const colorType = {
     APPROVE: '#108ee9',
-    PENDING: '#87d068',
-    PICK: '#f50'
+    PENDING: '#87d068'
   }
 
   useEffect(() => {
@@ -87,7 +86,7 @@ const BookRoom = () => {
   };
 
   const eventStyleGetter = (event) => {
-    const backgroundColor = event.UserId === user.id ? colorType.PICK: (event.approved ? colorType.APPROVE : colorType.PENDING);
+    const backgroundColor = event.UserId === user.id ? user.mycolor: (event.approved ? colorType.APPROVE : colorType.PENDING);
     return {
       style: {
         backgroundColor,
@@ -222,7 +221,7 @@ const BookRoom = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <HeaderComponent handleLogout={logoutUser} />
+      <HeaderComponent />
       <Content style={{ margin: '16px', padding: '12px', background: '#fff', borderRadius: '8px' }}>
         <RoomSelector
           rooms={rooms}

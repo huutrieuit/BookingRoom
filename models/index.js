@@ -26,12 +26,30 @@ const User = sequelize.define('User', {
       }
     }
   },
+  ip: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: {
+      args: true,
+      msg: "IP  already exists !!!"
+    },
+    validate: {
+      notEmpty: {
+        args: true,
+        msg: 'IP is required'
+      }
+    }
+  },
+  mycolor:{
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: '#f50'
+  },
   role: {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'user'
   },
-  
 });
 
 // Định nghĩa model Room

@@ -5,6 +5,7 @@ import { BookingProvider } from './context/BookingContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import BookRoom from './pages/BookRoom';
+import Profile from './pages/Profile';
 
 const App = () => (
   <UserProvider>
@@ -14,7 +15,9 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/book-room" element={<ProtectedRoute component={BookRoom} />} />
+          <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
           <Route path="*" element={<Navigate to="/login" />} />
+
         </Routes>
       </Router>
     </BookingProvider>
