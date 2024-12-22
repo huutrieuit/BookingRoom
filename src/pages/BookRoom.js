@@ -53,14 +53,15 @@ const BookRoom = () => {
     }
   }, [selectedRoom]);
 
+
   useEffect(() => {
-    console.log("1");
-    if (rooms.length > 0 && selectedRoom === null) {
-      setSelectedRoom(rooms[0].id);
-      fetchBookings(rooms[0].id);
-    }
-    
-  }, [rooms, selectedRoom, fetchBookings]);
+     console.log("1");
+     if (rooms.length > 0 && selectedRoom === null) {
+       setSelectedRoom(rooms[0].id);
+       fetchBookings(rooms[0].id);
+     }
+     
+   }, [rooms, selectedRoom, fetchBookings]);
 
   const handleSelectSlot = async ({ start, end }) => {
     if (user) {
@@ -86,7 +87,7 @@ const BookRoom = () => {
   };
 
   const eventStyleGetter = (event) => {
-    const backgroundColor = event.UserId === user.id ? user.mycolor: (event.approved ? colorType.APPROVE : colorType.PENDING);
+    const backgroundColor = event.UserId === user.id ? user.mycolor : (event.approved ? colorType.APPROVE : colorType.PENDING);
     return {
       style: {
         backgroundColor,
@@ -94,7 +95,7 @@ const BookRoom = () => {
         opacity: 0.8,
         color: 'white',
         border: '0px',
-        display: 'block'
+        //display: 'block'
       }
     };
   };
@@ -230,7 +231,7 @@ const BookRoom = () => {
           handleRefresh={() => fetchBookings(selectedRoom)}
           colorType={colorType}
         />
-         <BookingCalendar
+        <BookingCalendar
           events={events}
           localizer={localizer}
           slotPropGetter={slotPropGetter}

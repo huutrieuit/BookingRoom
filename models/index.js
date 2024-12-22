@@ -6,7 +6,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     unique: {
       args: true,
-      msg: 'Username already exists!'
+      msg: 'Username already exists1!'
     },
     allowNull: false,
     validate: {
